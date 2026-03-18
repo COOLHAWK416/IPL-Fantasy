@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IPL Fantasy 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, updateDoc, deleteDoc, query, where, getDocs }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // ── PASTE YOUR FIREBASE CONFIG HERE ──────────────────────────
+  const firebaseConfig = {
+    apiKey: "AIzaSyBnoZcVNnQeonTYFPymhYE4HPmmv75hZkA",
+    authDomain: "ipl-fantasy-aea2b.firebaseapp.com",
+    databaseURL: "https://ipl-fantasy-aea2b-default-rtdb.firebaseio.com",
+    projectId: "ipl-fantasy-aea2b",
+    storageBucket: "ipl-fantasy-aea2b.firebasestorage.app",
+    messagingSenderId: "1044633448792",
+    appId: "1:1044633448792:web:0eb9268c976c8f9d5ab52d"
+  };
+  // ─────────────────────────────────────────────────────────────
+
+  let app, db;
+  try {
+    app = initializeApp(firebaseConfig);
+    db  = getFirestore(app);
+    window._db = db;
+    window._firebase = { doc, setDoc, getDoc, onSnapshot, collection, addDoc, updateDoc, deleteDoc, query, where, getDocs };
+    window._firebaseReady = true;
+    document.getElementById('fb-status').textContent = '🟢 Firebase connected';
+    document.getElementById('fb-status').style.color = 'var(--success)';
+  } catch(e) {
+    window._firebaseReady = false;
+    document.getElementById('fb-status').textContent = '🔴 Firebase not configured — running in local mode';
+    document.getElementById('fb-status').style.color = 'var(--danger)';
+  }
+</script>
+
+<style>
+:root {
+  --bg: #080a0f;
+  --surface: #0f1118;
+  --surface2: #181c27;
+  --surface3: #1f2435;
+  --border: #252a3a;
+  --border2: #2e3448;
+  --accent: #f97316;
+  --accent2: #fbbf24;
+  --accent3: #38bdf8;
+  --green: #34d399;
+  --danger: #f43f5e;
+  --text: #e8eaf0;
+  --text2: #9299b0;
+  --success: #34d399;
+  --glow-orange: 0 0 40px rgba(249,115,22,0.12);
+  --glow-blue: 0 0 40px rgba(56,189,248,0.1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 900;
+  height: 60px;
+  background: rgba(8,10,15,0.95);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 1.5rem; gap: 1rem;
+}
+.nav-logo {
+  font-family: 'Bebas Neue'; font-size: 1.6rem; letter-spacing: 3px;
+  color: var(--accent2); margin-right: auto; cursor: pointer;
+}
+.nav-logo span { color: var(--accent); }
+.nav-tabs { display: flex; gap: 2px; }
+.ntab {
+  background: none; border: none; color: var(--text2);
+  padding: 7px 14px; border-radius: 8px; cursor: pointer;
+  font-family: 'DM Sans'; font-size: 0.88rem; font-weight: 500;
+  transition: all .2s;
+}
+.ntab:hover { color: var(--text); background: var(--surface2); }
+.ntab.active { color: var(--accent); background: rgba(249,115,22,0.1); }
+#fb-status {
+  font-family: 'JetBrains Mono'; font-size: 0.7rem; color: var(--text2);
+  white-space: nowrap;
+}
+.nav-user {
+  background: var(--surface2); border: 1px solid var(--border2);
+  padding: 6px 14px; border-radius: 100px; font-size: 0.84rem;
+  font-weight: 500; cursor: pointer; transition: all .2s; white-space: nowrap;
+}
+.nav-user:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── PAGES ── */
+.page { display: none; padding-top: 60px; min-height: 100vh; }
+.page.active { display: block; }
+
+/* ── HOME ── */
+.hero {
+  position: relative; min-height: calc(100vh - 60px);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.hero-orbs {
+  position: absolute; inset: 0; pointer-events: none;
+}
+.orb {
+  position: absolute; border-radius: 50%; filter: blur(80px);
+  animation: orbFloat 8s ease-in-out infinite;
+}
+.orb1 { width: 500px; height: 500px; background: rgba(249,115,22,0.12); top: -100px; right: -100px; }
+.orb2 { width: 400px; height: 400px; background: rgba(56,189,248,0.08); bottom: -80px; left: -80px; animation-delay: -4s; }
+.orb3 { width: 300px; height: 300px; background: rgba(251,191,36,0.07); top: 50%; left: 50%; animation-delay: -2s; }
+@keyframes orbFloat {
+  0%,100% { transform: translate(0,0) scale(1); }
+  50% { transform: translate(20px,-20px) scale(1.05); }
+}
+.hero-grid-bg {
+  position: absolute; inset: 0;
+  background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+.hero-content { position: relative; text-align: center; padding: 2rem; max-width: 700px; }
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.2);
+  color: var(--accent2); padding: 6px 18px; border-radius: 100px;
+  font-size: 0.78rem; font-weight: 600; letter-spacing: 2px;
+  text-transform: uppercase; margin-bottom: 2rem;
+  animation: fadeUp .6s ease both;
+}
+.hero-h1 {
+  font-family: 'Bebas Neue'; font-size: clamp(5rem, 14vw, 10rem);
+  line-height: .88; letter-spacing: 4px; margin-bottom: 1.5rem;
+  animation: fadeUp .6s .1s ease both;
+}
+.hero-h1 .t1 { display: block; color: var(--text); }
+.hero-h1 .t2 { display: block; color: var(--accent); }
+.hero-h1 .t3 { display: block; color: transparent; -webkit-text-stroke: 2px rgba(255,255,255,0.15); }
+.hero-p {
+  font-size: 1.05rem; color: var(--text2); line-height: 1.7; margin-bottom: 2.5rem;
+  animation: fadeUp .6s .2s ease both;
+}
+.hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; animation: fadeUp .6s .3s ease both; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+
+.hero-stats {
+  display: flex; gap: 3rem; justify-content: center; margin-top: 5rem;
+  animation: fadeUp .6s .4s ease both;
+}
+.hstat { text-align: center; }
+.hstat-n { font-family: 'Bebas Neue'; font-size: 2.8rem; color: var(--accent2); line-height: 1; }
+.hstat-l { font-size: 0.72rem; color: var(--text2); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+
+/* ── BUTTONS ── */
+.btn { border: none; cursor: pointer; font-family: 'DM Sans'; font-weight: 600; transition: all .2s; border-radius: 10px; }
+.btn-primary { background: var(--accent); color: white; padding: 13px 28px; font-size: 0.95rem; }
+.btn-primary:hover { background: #ea6c0a; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(249,115,22,0.35); }
+.btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); padding: 13px 28px; font-size: 0.95rem; }
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+.btn-sm { background: var(--surface2); border: 1px solid var(--border); color: var(--text2); padding: 6px 14px; font-size: 0.8rem; border-radius: 8px; }
+.btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+.btn-danger { background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.3); color: var(--danger); padding: 8px 16px; font-size: 0.82rem; border-radius: 8px; }
+.btn-success { background: var(--green); color: #000; padding: 13px 28px; font-size: 0.95rem; font-weight: 700; border-radius: 10px; border: none; cursor: pointer; }
+.btn-success:hover { background: #2fc98a; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; transition: all .2s;
+}
+.card:hover { border-color: var(--border2); box-shadow: var(--glow-orange); }
+.card-header { padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; justify-content: space-between; }
+
+/* ── PAGE HEADER ── */
+.ph { padding: 2rem 2rem 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+.ph-title { font-family: 'Bebas Neue'; font-size: 2.2rem; letter-spacing: 2px; }
+.ph-sub { color: var(--text2); font-size: 0.85rem; margin-top: 2px; }
+
+/* ── LEAGUE CARDS ── */
+.leagues-grid { padding: 0 2rem 2rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+.lcard {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 1.4rem; cursor: pointer; transition: all .2s;
+  position: relative; overflow: hidden;
+}
+.lcard::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  opacity: 0; transition: opacity .2s;
+}
+.lcard:hover { border-color: rgba(249,115,22,0.4); transform: translateY(-2px); }
+.lcard:hover::before { opacity: 1; }
+.lcard-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1rem; }
+.lcard-icon { width: 44px; height: 44px; border-radius: 12px; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+.badge { padding: 3px 10px; border-radius: 100px; font-size: 0.72rem; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
+.badge-open { background: rgba(52,211,153,0.12); color: var(--green); }
+.badge-draft { background: rgba(251,191,36,0.12); color: var(--accent2); }
+.badge-live { background: rgba(244,63,94,0.12); color: var(--danger); }
+.badge-done { background: rgba(146,153,176,0.12); color: var(--text2); }
+.lcard-name { font-weight: 700; font-size: 1.05rem; margin-bottom: 4px; }
+.lcard-meta { font-size: 0.8rem; color: var(--text2); }
+.lcard-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+.avatars { display: flex; }
+.av {
+  width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--surface);
+  background: var(--surface2); display: flex; align-items: center; justify-content: center;
+  font-size: 0.65rem; font-weight: 700; margin-left: -6px;
+}
+.av:first-child { margin-left: 0; }
+
+/* ── LEAGUE DETAIL ── */
+#league-detail-page { display: none; padding-top: 60px; }
+#league-detail-page.active { display: block; }
+.ldh {
+  background: linear-gradient(135deg, var(--surface) 0%, var(--bg) 100%);
+  border-bottom: 1px solid var(--border); padding: 2rem;
+}
+.ldh-top { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem; }
+.ld-title { font-family: 'Bebas Neue'; font-size: 2.8rem; letter-spacing: 2px; }
+.ld-meta { color: var(--text2); font-size: 0.88rem; margin-top: 4px; }
+.invite-panel {
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 14px; padding: 1rem 1.2rem; min-width: 280px;
+}
+.invite-label { font-size: 0.72rem; color: var(--text2); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; font-weight: 600; }
+.invite-row { display: flex; gap: 8px; }
+.invite-url {
+  flex: 1; background: var(--bg); border: 1px solid var(--border);
+  color: var(--accent3); font-family: 'JetBrains Mono'; font-size: 0.75rem;
+  padding: 8px 12px; border-radius: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.copy-btn {
+  background: var(--accent); border: none; color: white;
+  padding: 8px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+}
+.ldh-actions { display: flex; gap: 10px; margin-top: 1.5rem; flex-wrap: wrap; }
+.ld-grid { display: grid; grid-template-columns: 280px 1fr; gap: 1.5rem; padding: 1.5rem 2rem; }
+.members-list .member-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 1.2rem; border-bottom: 1px solid var(--border);
+}
+.member-item:last-child { border-bottom: none; }
+.mi-left { display: flex; align-items: center; gap: 10px; }
+.mi-name { font-weight: 600; font-size: 0.88rem; }
+.mi-team { font-size: 0.75rem; color: var(--text2); }
+.mi-budget { font-family: 'JetBrains Mono'; font-size: 0.78rem; color: var(--green); }
+
+/* Leaderboard */
+.lb-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 1.2rem; border-bottom: 1px solid var(--border);
+}
+.lb-row:last-child { border-bottom: none; }
+.lb-rank { font-family: 'Bebas Neue'; font-size: 1.3rem; color: var(--text2); width: 28px; text-align: center; }
+.lb-rank.gold { color: var(--accent2); }
+.lb-rank.silver { color: #94a3b8; }
+.lb-rank.bronze { color: #cd7c4e; }
+.lb-info { flex: 1; }
+.lb-team { font-weight: 600; font-size: 0.88rem; }
+.lb-owner { font-size: 0.75rem; color: var(--text2); }
+.lb-pts { font-family: 'JetBrains Mono'; font-size: 0.9rem; color: var(--accent2); font-weight: 600; }
+.lb-players { font-size: 0.75rem; color: var(--text2); }
+
+/* ── AUCTION ── */
+.auction-wrap { display: grid; grid-template-columns: 1fr 340px; min-height: calc(100vh - 60px); }
+.auction-center { padding: 2rem; overflow-y: auto; }
+.auction-side { background: var(--surface); border-left: 1px solid var(--border); padding: 1.5rem; overflow-y: auto; }
+
+.player-stage {
+  background: linear-gradient(135deg, var(--surface2), rgba(249,115,22,0.04));
+  border: 1px solid rgba(249,115,22,0.2); border-radius: 20px;
+  padding: 2rem; text-align: center; margin-bottom: 1.5rem;
+  position: relative; overflow: hidden;
+}
+.player-stage::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(249,115,22,0.06), transparent 60%);
+  pointer-events: none;
+}
+.ps-role { display: inline-block; padding: 4px 14px; border-radius: 100px; font-size: 0.72rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 1rem; }
+.r-bat { background: rgba(56,189,248,0.12); color: var(--accent3); }
+.r-bowl { background: rgba(244,63,94,0.12); color: var(--danger); }
+.r-all { background: rgba(52,211,153,0.12); color: var(--green); }
+.r-wk { background: rgba(251,191,36,0.12); color: var(--accent2); }
+.ps-name { font-family: 'Bebas Neue'; font-size: 3.5rem; letter-spacing: 3px; line-height: 1; margin-bottom: 6px; }
+.ps-team { font-size: 0.85rem; color: var(--text2); margin-bottom: 1.5rem; }
+.ps-bid-label { font-size: 0.72rem; color: var(--text2); letter-spacing: 2px; text-transform: uppercase; }
+.ps-bid { font-family: 'Bebas Neue'; font-size: 4.5rem; color: var(--accent2); letter-spacing: 2px; line-height: 1.1; }
+.ps-bidder { font-size: 0.9rem; color: var(--accent); font-weight: 600; min-height: 1.4em; margin-top: 4px; }
+.bid-inc-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 1.5rem; }
+.bid-inc {
+  background: var(--surface3); border: 1px solid var(--border2); color: var(--text2);
+  padding: 8px 18px; border-radius: 8px; font-size: 0.82rem; cursor: pointer; transition: all .2s;
+}
+.bid-inc:hover { border-color: var(--accent); color: var(--accent); }
+.auction-btns { display: flex; flex-direction: column; gap: 8px; margin-top: 1rem; }
+
+.sold-log { max-height: 280px; overflow-y: auto; }
+.sold-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0; border-bottom: 1px solid rgba(37,42,58,0.6); font-size: 0.82rem;
+}
+.sold-item:last-child { border-bottom: none; }
+.sold-pname { font-weight: 600; }
+.sold-pto { font-size: 0.75rem; color: var(--text2); }
+.sold-pprice { font-family: 'JetBrains Mono'; color: var(--accent2); font-size: 0.8rem; }
+
+.side-section-title { font-size: 0.72rem; color: var(--text2); letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600; margin-bottom: 10px; }
+.budget-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.budget-row:last-child { border-bottom: none; }
+.br-name { font-weight: 600; font-size: 0.85rem; }
+.br-count { font-size: 0.73rem; color: var(--text2); }
+.br-budget { font-family: 'JetBrains Mono'; font-size: 0.82rem; color: var(--green); }
+.bidder-select-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.bidder-chip {
+  background: var(--surface3); border: 1px solid var(--border2); color: var(--text2);
+  padding: 5px 12px; border-radius: 100px; font-size: 0.78rem; cursor: pointer; transition: all .2s;
+}
+.bidder-chip:hover, .bidder-chip.selected { background: rgba(249,115,22,0.15); border-color: var(--accent); color: var(--accent); }
+
+.queue-item {
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+  border-radius: 10px; background: var(--surface2); border: 1px solid var(--border); margin-bottom: 6px;
+}
+.qi-num { font-family: 'JetBrains Mono'; font-size: 0.72rem; color: var(--text2); width: 18px; }
+.qi-name { flex: 1; font-size: 0.82rem; font-weight: 600; }
+.qi-team { font-size: 0.72rem; color: var(--text2); }
+.qi-price { font-family: 'JetBrains Mono'; font-size: 0.72rem; color: var(--accent2); }
+
+/* ── PLAYERS TABLE ── */
+.toolbar { padding: 1.2rem 2rem; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid var(--border); }
+.search-box {
+  background: var(--surface); border: 1px solid var(--border2); color: var(--text);
+  padding: 9px 14px; border-radius: 10px; font-family: 'DM Sans'; font-size: 0.88rem;
+  outline: none; width: 240px; transition: border-color .2s;
+}
+.search-box:focus { border-color: var(--accent); }
+.filt { background: var(--surface); border: 1px solid var(--border); color: var(--text2); padding: 8px 14px; border-radius: 8px; font-size: 0.82rem; cursor: pointer; transition: all .2s; font-family: 'DM Sans'; }
+.filt:hover, .filt.on { background: var(--accent); border-color: var(--accent); color: white; }
+.tbl-wrap { padding: 0 2rem 2rem; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+thead th { text-align: left; padding: 10px 14px; font-size: 0.72rem; color: var(--text2); letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border); font-weight: 600; }
+tbody td { padding: 11px 14px; border-bottom: 1px solid rgba(37,42,58,0.5); font-size: 0.88rem; }
+tbody tr:hover td { background: rgba(249,115,22,0.03); }
+.pcell { display: flex; align-items: center; gap: 10px; }
+.pav { width: 34px; height: 34px; border-radius: 50%; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; flex-shrink: 0; }
+.pname { font-weight: 600; }
+.pteam-small { font-size: 0.73rem; color: var(--text2); }
+.team-chip { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; }
+.tc-CSK { background: rgba(255,215,0,0.1); color: #fbbf24; }
+.tc-MI { background: rgba(30,100,210,0.12); color: #60a5fa; }
+.tc-RCB { background: rgba(200,30,30,0.12); color: #f87171; }
+.tc-KKR { background: rgba(120,40,200,0.12); color: #c084fc; }
+.tc-SRH { background: rgba(249,115,22,0.12); color: #fb923c; }
+.tc-DC { background: rgba(14,165,233,0.12); color: #38bdf8; }
+.tc-RR { background: rgba(236,72,153,0.12); color: #f472b6; }
+.tc-LSG { background: rgba(16,185,129,0.1); color: #34d399; }
+.tc-GT { background: rgba(6,182,212,0.1); color: #22d3ee; }
+.tc-PBKS { background: rgba(239,68,68,0.1); color: #fc8181; }
+.price-mono { font-family: 'JetBrains Mono'; font-size: 0.82rem; color: var(--accent2); }
+
+/* ── SCORING ── */
+.scoring-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; padding: 0 2rem 2rem; }
+.score-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.2rem; }
+.sc-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+.sc-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 0.84rem; }
+.sc-row:last-child { border-bottom: none; }
+.sc-pts { font-family: 'JetBrains Mono'; color: var(--accent2); font-size: 0.82rem; font-weight: 600; }
+
+/* ── MODAL ── */
+.overlay { display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.75); backdrop-filter: blur(10px); align-items: center; justify-content: center; }
+.overlay.open { display: flex; }
+.modal { background: var(--surface); border: 1px solid var(--border2); border-radius: 20px; padding: 2rem; width: 90%; max-width: 460px; animation: mIn .3s ease; }
+@keyframes mIn { from { opacity:0; transform:scale(.93) translateY(16px); } to { opacity:1; transform:scale(1) translateY(0); } }
+.modal-title { font-family: 'Bebas Neue'; font-size: 1.8rem; letter-spacing: 2px; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+.mclose { background: none; border: none; color: var(--text2); font-size: 1.4rem; cursor: pointer; }
+.mclose:hover { color: var(--text); }
+.fg { margin-bottom: 1rem; }
+.fl { display: block; font-size: 0.78rem; color: var(--text2); font-weight: 600; letter-spacing: .5px; margin-bottom: 6px; }
+.fi {
+  width: 100%; background: var(--bg); border: 1px solid var(--border2);
+  color: var(--text); padding: 11px 14px; border-radius: 10px;
+  font-family: 'DM Sans'; font-size: 0.9rem; outline: none; transition: border-color .2s;
+}
+.fi:focus { border-color: var(--accent); }
+select.fi option { background: var(--bg); }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 2000;
+  background: var(--surface2); border: 1px solid var(--border2);
+  padding: 12px 20px; border-radius: 12px; font-size: 0.86rem;
+  transform: translateY(60px); opacity: 0; transition: all .3s; pointer-events: none;
+  max-width: 320px;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.ok { border-color: var(--green); color: var(--green); }
+.toast.err { border-color: var(--danger); color: var(--danger); }
+
+/* ── EMPTY STATE ── */
+.empty { text-align: center; padding: 4rem 2rem; color: var(--text2); }
+.empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+.empty-title { font-size: 1.1rem; color: var(--text); font-weight: 600; margin-bottom: 6px; }
+
+/* ── SCORING PAGE ── */
+.score-info { background: rgba(56,189,248,0.06); border: 1px solid rgba(56,189,248,0.2); border-radius: 14px; padding: 1.2rem 1.5rem; margin: 0 2rem 1.5rem; font-size: 0.85rem; color: var(--accent3); line-height: 1.6; }
+
+@media (max-width: 900px) {
+  .auction-wrap { grid-template-columns: 1fr; }
+  .auction-side { border-left: none; border-top: 1px solid var(--border); }
+  .ld-grid { grid-template-columns: 1fr; }
+  .nav-tabs { display: none; }
+  .hero-stats { gap: 1.5rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo" onclick="goHome()">IPL<span>F</span>antasy</div>
+  <div class="nav-tabs">
+    <button class="ntab active" onclick="showPage('home')">Home</button>
+    <button class="ntab" onclick="showPage('leagues')">Leagues</button>
+    <button class="ntab" onclick="showPage('players')">Players</button>
+    <button class="ntab" onclick="showPage('auction')">Auction</button>
+    <button class="ntab" onclick="showPage('scoring')">Scoring</button>
+  </div>
+  <span id="fb-status">⏳ Connecting...</span>
+  <div class="nav-user" id="nav-user" onclick="openModal('login-modal')">Sign In</div>
+</nav>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ══════════ HOME ══════════ -->
+<div id="home" class="page active">
+  <div class="hero">
+    <div class="hero-orbs"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>
+    <div class="hero-grid-bg"></div>
+    <div class="hero-content">
+      <div class="hero-eyebrow">🏏 IPL 2026 · Season 19 · All 10 Teams</div>
+      <h1 class="hero-h1">
+        <span class="t1">DRAFT</span>
+        <span class="t2">YOUR</span>
+        <span class="t3">SQUAD</span>
+      </h1>
+      <p class="hero-p">Real-time fantasy leagues with auction drafts, live scoring sync, and friend invite links. Powered by Firebase — every bid updates instantly for everyone.</p>
+      <div class="hero-actions">
+        <button class="btn btn-primary" onclick="openModal('create-league-modal')">🏆 Create League</button>
+        <button class="btn btn-secondary" onclick="showPage('players')">Browse Players →</button>
+      </div>
+      <div class="hero-stats">
+        <div class="hstat"><div class="hstat-n">250+</div><div class="hstat-l">Players</div></div>
+        <div class="hstat"><div class="hstat-n">10</div><div class="hstat-l">IPL Teams</div></div>
+        <div class="hstat"><div class="hstat-n">₹125Cr</div><div class="hstat-l">Max Budget</div></div>
+        <div class="hstat"><div class="hstat-n">Live</div><div class="hstat-l">Sync</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ LEAGUES ══════════ -->
+<div id="leagues" class="page">
+  <div class="ph">
+    <div><div class="ph-title">My Leagues</div><div class="ph-sub">Create or join a league to play with friends</div></div>
+    <button class="btn btn-primary" onclick="openModal('create-league-modal')">+ Create League</button>
+  </div>
+  <div class="leagues-grid" id="leagues-grid">
+    <div class="empty"><div class="empty-icon">🏆</div><div class="empty-title">No leagues yet</div>Sign in and create a league to get started.</div>
+  </div>
+</div>
+
+<!-- ══════════ LEAGUE DETAIL ══════════ -->
+<div id="league-detail-page">
+  <div class="ldh">
+    <button class="btn btn-sm" onclick="showPage('leagues')" style="margin-bottom:1.2rem">← Leagues</button>
+    <div class="ldh-top">
+      <div>
+        <div class="ld-title" id="ld-name">—</div>
+        <div class="ld-meta" id="ld-meta">—</div>
+      </div>
+      <div class="invite-panel">
+        <div class="invite-label">🔗 Invite Link</div>
+        <div class="invite-row">
+          <div class="invite-url" id="ld-invite-url">—</div>
+          <button class="copy-btn" onclick="copyInvite()">Copy</button>
+        </div>
+      </div>
+    </div>
+    <div class="ldh-actions">
+      <button class="btn btn-primary" id="start-auction-btn" onclick="launchAuction()">🎯 Start Auction Draft</button>
+      <button class="btn btn-secondary" onclick="openModal('add-score-modal')">📊 Add Match Points</button>
+    </div>
+  </div>
+  <div class="ld-grid">
+    <div class="card members-list" id="ld-members-panel"><div class="card-header">👥 Members</div><div id="ld-members"></div></div>
+    <div class="card" id="ld-lb-panel"><div class="card-header">🏅 Leaderboard</div><div id="ld-lb"></div></div>
+  </div>
+</div>
+
+<!-- ══════════ PLAYERS ══════════ -->
+<div id="players" class="page">
+  <div class="ph"><div><div class="ph-title">IPL 2026 Players</div><div class="ph-sub">Full squads — all 10 franchises</div></div></div>
+  <div class="toolbar">
+    <input class="search-box" type="text" placeholder="🔍 Search player..." oninput="filterP(this.value)" id="psearch">
+    <button class="filt on" onclick="roleF('all',this)">All</button>
+    <button class="filt" onclick="roleF('BAT',this)">Batters</button>
+    <button class="filt" onclick="roleF('BOWL',this)">Bowlers</button>
+    <button class="filt" onclick="roleF('ALL',this)">All-rounders</button>
+    <button class="filt" onclick="roleF('WK',this)">Keepers</button>
+    <select class="filt" onchange="teamF(this.value)" style="cursor:pointer">
+      <option value="">All Teams</option>
+      <option>CSK</option><option>MI</option><option>RCB</option><option>KKR</option>
+      <option>SRH</option><option>DC</option><option>RR</option><option>LSG</option>
+      <option>GT</option><option>PBKS</option>
+    </select>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Player</th><th>Role</th><th>Team</th><th>Country</th><th>IPL Price</th><th>Base</th></tr></thead>
+      <tbody id="ptbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════ AUCTION ══════════ -->
+<div id="auction" class="page" style="padding-top:60px">
+  <div style="padding:1.2rem 2rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+    <div>
+      <div style="font-family:'Bebas Neue';font-size:1.8rem;letter-spacing:2px">Auction Draft Room</div>
+      <div style="color:var(--text2);font-size:0.83rem" id="auction-league-label">Open from a league to begin</div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <span style="font-family:'JetBrains Mono';font-size:0.8rem;color:var(--text2)" id="auction-progress">—</span>
+      <button class="btn btn-sm" onclick="resetAuction()">↺ Reset</button>
+    </div>
+  </div>
+  <div class="auction-wrap">
+    <div class="auction-center">
+      <!-- Stage -->
+      <div class="player-stage" id="player-stage">
+        <div class="ps-role r-bat" id="ps-role">—</div>
+        <div class="ps-name" id="ps-name">No Player</div>
+        <div class="ps-team" id="ps-team">Open from a league to start auction</div>
+        <div style="margin:1.2rem 0">
+          <div class="ps-bid-label">Current Bid</div>
+          <div class="ps-bid" id="ps-bid">₹0Cr</div>
+          <div class="ps-bidder" id="ps-bidder"></div>
+        </div>
+        <div class="bid-inc-row">
+          <button class="bid-inc" onclick="incBid(.5)">+0.5</button>
+          <button class="bid-inc" onclick="incBid(1)">+1 Cr</button>
+          <button class="bid-inc" onclick="incBid(2)">+2 Cr</button>
+          <button class="bid-inc" onclick="incBid(5)">+5 Cr</button>
+          <button class="bid-inc" onclick="incBid(10)">+10 Cr</button>
+        </div>
+        <!-- Who's bidding -->
+        <div style="margin-top:1rem">
+          <div class="side-section-title" style="text-align:left">Select Bidder</div>
+          <div class="bidder-select-row" id="bidder-chips"></div>
+        </div>
+        <div class="auction-btns">
+          <button class="btn btn-primary" onclick="placeBid()" style="width:100%">Place Bid 🔨</button>
+          <button class="btn-success" onclick="soldPlayer()" style="width:100%">✓ SOLD!</button>
+          <button class="btn btn-secondary" onclick="skipPlayer()" style="width:100%;padding:10px">Skip Player →</button>
+        </div>
+      </div>
+
+      <!-- Sold Log -->
+      <div class="card">
+        <div class="card-header">✅ Sold Players <span style="color:var(--text2);font-weight:400;font-size:0.8rem" id="sold-count">0</span></div>
+        <div class="sold-log" id="sold-log" style="padding:.5rem 1rem"><div style="color:var(--text2);font-size:0.83rem;padding:.5rem 0">No players sold yet</div></div>
+      </div>
+    </div>
+    <div class="auction-side">
+      <div class="side-section-title">Team Budgets</div>
+      <div id="budget-rows" style="margin-bottom:1.5rem"></div>
+      <div class="side-section-title">Up Next</div>
+      <div id="queue-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ SCORING ══════════ -->
+<div id="scoring" class="page">
+  <div class="ph"><div><div class="ph-title">Fantasy Scoring</div><div class="ph-sub">IPL 2026 official fantasy point system</div></div></div>
+  <div class="score-info">💡 Points are calculated automatically when you add match results from a league's detail page. The leaderboard updates in real-time for all members.</div>
+  <div class="scoring-grid">
+    <div class="score-card">
+      <div class="sc-title">🏏 Batting</div>
+      <div class="sc-row"><span>Run scored</span><span class="sc-pts">+1 pt</span></div>
+      <div class="sc-row"><span>Boundary (4)</span><span class="sc-pts">+1 pt</span></div>
+      <div class="sc-row"><span>Six (6)</span><span class="sc-pts">+2 pts</span></div>
+      <div class="sc-row"><span>Half century (50)</span><span class="sc-pts">+8 pts</span></div>
+      <div class="sc-row"><span>Century (100)</span><span class="sc-pts">+16 pts</span></div>
+      <div class="sc-row"><span>Duck (batting)</span><span class="sc-pts" style="color:var(--danger)">-2 pts</span></div>
+      <div class="sc-row"><span>Strike rate bonus (&gt;170)</span><span class="sc-pts">+6 pts</span></div>
+      <div class="sc-row"><span>Strike rate penalty (&lt;70)</span><span class="sc-pts" style="color:var(--danger)">-6 pts</span></div>
+    </div>
+    <div class="score-card">
+      <div class="sc-title">🎳 Bowling</div>
+      <div class="sc-row"><span>Wicket (non-runout)</span><span class="sc-pts">+25 pts</span></div>
+      <div class="sc-row"><span>3 wickets</span><span class="sc-pts">+4 pts bonus</span></div>
+      <div class="sc-row"><span>4 wickets</span><span class="sc-pts">+8 pts bonus</span></div>
+      <div class="sc-row"><span>5 wickets</span><span class="sc-pts">+16 pts bonus</span></div>
+      <div class="sc-row"><span>Maiden over</span><span class="sc-pts">+12 pts</span></div>
+      <div class="sc-row"><span>Economy &lt;5 (min 2 ov)</span><span class="sc-pts">+6 pts</span></div>
+      <div class="sc-row"><span>Economy &gt;9 (min 2 ov)</span><span class="sc-pts" style="color:var(--danger)">-6 pts</span></div>
+    </div>
+    <div class="score-card">
+      <div class="sc-title">🧤 Fielding</div>
+      <div class="sc-row"><span>Catch</span><span class="sc-pts">+8 pts</span></div>
+      <div class="sc-row"><span>Stumping</span><span class="sc-pts">+12 pts</span></div>
+      <div class="sc-row"><span>Run out (direct)</span><span class="sc-pts">+12 pts</span></div>
+      <div class="sc-row"><span>Run out (assist)</span><span class="sc-pts">+6 pts</span></div>
+      <div class="sc-row"><span>3+ catches in match</span><span class="sc-pts">+4 pts bonus</span></div>
+    </div>
+    <div class="score-card">
+      <div class="sc-title">⭐ Bonus</div>
+      <div class="sc-row"><span>Playing XI (appearing)</span><span class="sc-pts">+4 pts</span></div>
+      <div class="sc-row"><span>Player of the Match</span><span class="sc-pts">+16 pts</span></div>
+      <div class="sc-row"><span>Captain multiplier</span><span class="sc-pts">×2</span></div>
+      <div class="sc-row"><span>Vice-captain multiplier</span><span class="sc-pts">×1.5</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MODALS ══════════ -->
+
+<!-- Login -->
+<div class="overlay" id="login-modal">
+  <div class="modal">
+    <div class="modal-title">Sign In 🏏 <button class="mclose" onclick="closeModal('login-modal')">×</button></div>
+    <div class="fg"><label class="fl">Your Name</label><input class="fi" id="ln" type="text" placeholder="Virat Kohli Fan"></div>
+    <div class="fg"><label class="fl">Email (optional)</label><input class="fi" id="le" type="email" placeholder="you@example.com"></div>
+    <div class="fg"><label class="fl">Team Nickname</label><input class="fi" id="lt" type="text" placeholder="e.g. Mumbai Maniacs XI"></div>
+    <button class="btn btn-primary" style="width:100%" onclick="doLogin()">Let's Go →</button>
+  </div>
+</div>
+
+<!-- Create League -->
+<div class="overlay" id="create-league-modal">
+  <div class="modal">
+    <div class="modal-title">New League 🏆 <button class="mclose" onclick="closeModal('create-league-modal')">×</button></div>
+    <div class="fg"><label class="fl">League Name</label><input class="fi" id="cl-name" type="text" placeholder="e.g. Office Fantasy IPL"></div>
+    <div class="fg"><label class="fl">Max Teams</label>
+      <select class="fi" id="cl-max"><option value="4">4 Teams</option><option value="6">6 Teams</option><option value="8" selected>8 Teams</option><option value="10">10 Teams</option><option value="12">12 Teams</option></select>
+    </div>
+    <div class="fg"><label class="fl">Budget per Team (₹ Crore)</label>
+      <select class="fi" id="cl-budget"><option value="50">₹50 Cr</option><option value="75">₹75 Cr</option><option value="100" selected>₹100 Cr</option><option value="125">₹125 Cr (Real IPL)</option></select>
+    </div>
+    <div class="fg"><label class="fl">Players per Team</label>
+      <select class="fi" id="cl-players"><option value="11" selected>11 Players</option><option value="15">15 Players</option><option value="18">18 Players</option></select>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:.5rem" onclick="createLeague()">Create League →</button>
+  </div>
+</div>
+
+<!-- Join League -->
+<div class="overlay" id="join-modal">
+  <div class="modal">
+    <div class="modal-title">Join League 🎯 <button class="mclose" onclick="closeModal('join-modal')">×</button></div>
+    <div style="color:var(--text2);font-size:0.88rem;margin-bottom:1.2rem" id="join-preview">You've been invited!</div>
+    <div class="fg"><label class="fl">Your Team Name</label><input class="fi" id="jt" type="text" placeholder="e.g. Chennai Challengers"></div>
+    <button class="btn btn-primary" style="width:100%" onclick="joinLeague()">Join Now →</button>
+  </div>
+</div>
+
+<!-- Add Score -->
+<div class="overlay" id="add-score-modal">
+  <div class="modal">
+    <div class="modal-title">Add Points 📊 <button class="mclose" onclick="closeModal('add-score-modal')">×</button></div>
+    <div style="color:var(--text2);font-size:0.83rem;margin-bottom:1rem">Manually add fantasy points for a member after a match</div>
+    <div class="fg"><label class="fl">Member</label><select class="fi" id="score-member" id="score-member"></select></div>
+    <div class="fg"><label class="fl">Points to Add</label><input class="fi" id="score-pts" type="number" placeholder="e.g. 145" min="0"></div>
+    <div class="fg"><label class="fl">Match / Note</label><input class="fi" id="score-note" type="text" placeholder="e.g. MI vs CSK — Match 12"></div>
+    <button class="btn btn-primary" style="width:100%" onclick="addScore()">Add Points ✓</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// PLAYER DATA — IPL 2026
+// ═══════════════════════════════════════════
+const PLAYERS = [
+  // CSK
+  {name:"Ruturaj Gaikwad",team:"CSK",role:"BAT",country:"🇮🇳",price:18,base:2},
+  {name:"MS Dhoni",team:"CSK",role:"WK",country:"🇮🇳",price:4,base:2},
+  {name:"Sanju Samson",team:"CSK",role:"WK",country:"🇮🇳",price:14,base:2},
+  {name:"Ayush Mhatre",team:"CSK",role:"BAT",country:"🇮🇳",price:3.8,base:0.3},
+  {name:"Dewald Brevis",team:"CSK",role:"BAT",country:"🇿🇦",price:3,base:0.75},
+  {name:"Sarfaraz Khan",team:"CSK",role:"BAT",country:"🇮🇳",price:5.5,base:0.75},
+  {name:"Shivam Dube",team:"CSK",role:"ALL",country:"🇮🇳",price:12,base:2},
+  {name:"Anshul Kamboj",team:"CSK",role:"ALL",country:"🇮🇳",price:3,base:0.5},
+  {name:"Jamie Overton",team:"CSK",role:"ALL",country:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",price:2,base:0.75},
+  {name:"Matthew Short",team:"CSK",role:"ALL",country:"🇦🇺",price:2.6,base:0.75},
+  {name:"Khaleel Ahmed",team:"CSK",role:"BOWL",country:"🇮🇳",price:5.25,base:0.75},
+  {name:"Noor Ahmad",team:"CSK",role:"BOWL",country:"🇦🇫",price:10,base:2},
+  {name:"Rahul Chahar",team:"CSK",role:"BOWL",country:"🇮🇳",price:3.8,base:1},
+  {name:"Nathan Ellis",team:"CSK",role:"BOWL",country:"🇦🇺",price:4,base:1},
+  {name:"Matt Henry",team:"CSK",role:"BOWL",country:"🇳🇿",price:2,base:0.75},
+  {name:"Mukesh Choudhary",team:"CSK",role:"BOWL",country:"🇮🇳",price:1,base:0.3},
+  {name:"Akeal Hosein",team:"CSK",role:"BOWL",country:"🇹🇹",price:1.5,base:0.5},
+  // MI
+  {name:"Rohit Sharma",team:"MI",role:"BAT",country:"🇮🇳",price:16.3,base:2},
+  {name:"Suryakumar Yadav",team:"MI",role:"BAT",country:"🇮🇳",price:16.35,base:2},
+  {name:"Tilak Varma",team:"MI",role:"BAT",country:"🇮🇳",price:17,base:2},
+  {name:"Quinton de Kock",team:"MI",role:"WK",country:"🇿🇦",price:1,base:1},
+  {name:"Ryan Rickelton",team:"MI",role:"WK",country:"🇿🇦",price:5,base:0.75},
+  {name:"Robin Minz",team:"MI",role:"WK",country:"🇮🇳",price:3,base:0.3},
+  {name:"Hardik Pandya",team:"MI",role:"ALL",country:"🇮🇳",price:16.35,base:2},
+  {name:"Will Jacks",team:"MI",role:"ALL",country:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",price:3.2,base:0.75},
+  {name:"Mitchell Santner",team:"MI",role:"ALL",country:"🇳🇿",price:3,base:0.75},
+  {name:"Shardul Thakur",team:"MI",role:"ALL",country:"🇮🇳",price:4,base:1},
+  {name:"Corbin Bosch",team:"MI",role:"ALL",country:"🇿🇦",price:2,base:0.5},
+  {name:"Jasprit Bumrah",team:"MI",role:"BOWL",country:"🇮🇳",price:18,base:2},
+  {name:"Trent Boult",team:"MI",role:"BOWL",country:"🇳🇿",price:12.5,base:2},
+  {name:"Deepak Chahar",team:"MI",role:"BOWL",country:"🇮🇳",price:9.5,base:1},
+  // RCB
+  {name:"Virat Kohli",team:"RCB",role:"BAT",country:"🇮🇳",price:21,base:2},
+  {name:"Rajat Patidar",team:"RCB",role:"BAT",country:"🇮🇳",price:11,base:2},
+  {name:"Devdutt Padikkal",team:"RCB",role:"BAT",country:"🇮🇳",price:6.5,base:1},
+  {name:"Phil Salt",team:"RCB",role:"WK",country:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",price:11.5,base:2},
+  {name:"Jitesh Sharma",team:"RCB",role:"WK",country:"🇮🇳",price:11,base:1},
+  {name:"Tim David",team:"RCB",role:"ALL",country:"🇸🇬",price:3,base:0.75},
+  {name:"Krunal Pandya",team:"RCB",role:"ALL",country:"🇮🇳",price:5.5,base:1},
+  {name:"Jacob Bethell",team:"RCB",role:"ALL",country:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",price:2.6,base:0.75},
+  {name:"Romario Shepherd",team:"RCB",role:"ALL",country:"🇬🇾",price:2,base:0.5},
+  {name:"Venkatesh Iyer",team:"RCB",role:"ALL",country:"🇮🇳",price:23.75,base:2},
+  {name:"Bhuvneshwar Kumar",team:"RCB",role:"BOWL",country:"🇮🇳",price:10.75,base:2},
+  {name:"Josh Hazlewood",team:"RCB",role:"BOWL",country:"🇦🇺",price:12.5,base:2},
+  {name:"Yash Dayal",team:"RCB",role:"BOWL",country:"🇮🇳",price:5,base:0.75},
+  {name:"Nuwan Thushara",team:"RCB",role:"BOWL",country:"🇱🇰",price:2.4,base:0.5},
+  // KKR
+  {name:"Ajinkya Rahane",team:"KKR",role:"BAT",country:"🇮🇳",price:1.5,base:1},
+  {name:"Rinku Singh",team:"KKR",role:"BAT",country:"🇮🇳",price:13,base:2},
+  {name:"Rovman Powell",team:"KKR",role:"BAT",country:"🇯🇲",price:1.5,base:0.75},
+  {name:"Angkrish Raghuvanshi",team:"KKR",role:"BAT",country:"🇮🇳",price:3,base:0.3},
+  {name:"Finn Allen",team:"KKR",role:"WK",country:"🇳🇿",price:1,base:0.75},
+  {name:"Tim Seifert",team:"KKR",role:"WK",country:"🇳🇿",price:1,base:0.5},
+  {name:"Cameron Green",team:"KKR",role:"ALL",country:"🇦🇺",price:25.2,base:2},
+  {name:"Sunil Narine",team:"KKR",role:"ALL",country:"🇹🇹",price:12,base:2},
+  {name:"Rachin Ravindra",team:"KKR",role:"ALL",country:"🇳🇿",price:3.8,base:0.75},
+  {name:"Ramandeep Singh",team:"KKR",role:"ALL",country:"🇮🇳",price:4,base:0.5},
+  {name:"Varun Chakravarthy",team:"KKR",role:"BOWL",country:"🇮🇳",price:12,base:2},
+  {name:"Harshit Rana",team:"KKR",role:"BOWL",country:"🇮🇳",price:4,base:0.75},
+  {name:"Matheesha Pathirana",team:"KKR",role:"BOWL",country:"🇱🇰",price:18,base:2},
+  {name:"Akash Deep",team:"KKR",role:"BOWL",country:"🇮🇳",price:3.8,base:0.75},
+  {name:"Umran Malik",team:"KKR",role:"BOWL",country:"🇮🇳",price:2,base:0.5},
+  // SRH
+  {name:"Travis Head",team:"SRH",role:"BAT",country:"🇦🇺",price:14,base:2},
+  {name:"Abhishek Sharma",team:"SRH",role:"ALL",country:"🇮🇳",price:14,base:2},
+  {name:"Nitish Kumar Reddy",team:"SRH",role:"ALL",country:"🇮🇳",price:6,base:0.75},
+  {name:"Liam Livingstone",team:"SRH",role:"ALL",country:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",price:4.5,base:0.75},
+  {name:"Kamindu Mendis",team:"SRH",role:"ALL",country:"🇱🇰",price:2.4,base:0.5},
+  {name:"Heinrich Klaasen",team:"SRH",role:"WK",country:"🇿🇦",price:23,base:2},
+  {name:"Ishan Kishan",team:"SRH",role:"WK",country:"🇮🇳",price:11.25,base:2},
+  {name:"Pat Cummins",team:"SRH",role:"BOWL",country:"🇦🇺",price:18,base:2},
+  {name:"Harshal Patel",team:"SRH",role:"BOWL",country:"🇮🇳",price:4.2,base:1},
+  {name:"Shivam Mavi",team:"SRH",role:"BOWL",country:"🇮🇳",price:2.4,base:0.5},
+  {name:"Jaydev Unadkat",team:"SRH",role:"BOWL",country:"🇮🇳",price:1,base:0.5},
+  // DC
+  {name:"KL Rahul",team:"DC",role:"WK",country:"🇮🇳",price:14,base:2},
+  {name:"Axar Patel",team:"DC",role:"ALL",country:"🇮🇳",price:16.5,base:2},
+  {name:"Karun Nair",team:"DC",role:"BAT",country:"🇮🇳",price:1,base:0.5},
+  {name:"David Miller",team:"DC",role:"BAT",country:"🇿🇦",price:1.5,base:0.75},
+  {name:"Ben Duckett",team:"DC",role:"WK",country:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",price:4.6,base:0.75},
+  {name:"Prithvi Shaw",team:"DC",role:"BAT",country:"🇮🇳",price:7.5,base:2},
+  {name:"Tristan Stubbs",team:"DC",role:"WK",country:"🇿🇦",price:5.2,base:0.75},
+  {name:"Sameer Rizvi",team:"DC",role:"ALL",country:"🇮🇳",price:8.4,base:0.3},
+  {name:"Mitchell Starc",team:"DC",role:"BOWL",country:"🇦🇺",price:11.75,base:2},
+  {name:"T. Natarajan",team:"DC",role:"BOWL",country:"🇮🇳",price:10.75,base:2},
+  {name:"Kuldeep Yadav",team:"DC",role:"BOWL",country:"🇮🇳",price:16.25,base:2},
+  {name:"Kyle Jamieson",team:"DC",role:"BOWL",country:"🇳🇿",price:1.5,base:0.75},
+  {name:"Lungi Ngidi",team:"DC",role:"BOWL",country:"🇿🇦",price:1,base:0.5},
+  // LSG
+  {name:"Rishabh Pant",team:"LSG",role:"WK",country:"🇮🇳",price:27,base:2},
+  {name:"Nicholas Pooran",team:"LSG",role:"WK",country:"🇹🇹",price:21,base:2},
+  {name:"Aiden Markram",team:"LSG",role:"BAT",country:"🇿🇦",price:2,base:0.75},
+  {name:"Mitchell Marsh",team:"LSG",role:"ALL",country:"🇦🇺",price:7,base:2},
+  {name:"Wanindu Hasaranga",team:"LSG",role:"ALL",country:"🇱🇰",price:5.25,base:0.75},
+  {name:"Abdul Samad",team:"LSG",role:"ALL",country:"🇮🇳",price:4.2,base:0.5},
+  {name:"Ayush Badoni",team:"LSG",role:"ALL",country:"🇮🇳",price:4,base:0.5},
+  {name:"Mohammad Shami",team:"LSG",role:"BOWL",country:"🇮🇳",price:10,base:2},
+  {name:"Avesh Khan",team:"LSG",role:"BOWL",country:"🇮🇳",price:9.75,base:2},
+  {name:"Mayank Yadav",team:"LSG",role:"BOWL",country:"🇮🇳",price:11,base:2},
+  {name:"Anrich Nortje",team:"LSG",role:"BOWL",country:"🇿🇦",price:6.5,base:0.75},
+  {name:"Arjun Tendulkar",team:"LSG",role:"BOWL",country:"🇮🇳",price:30,base:0.3},
+  // RR
+  {name:"Yashasvi Jaiswal",team:"RR",role:"BAT",country:"🇮🇳",price:18,base:2},
+  {name:"Riyan Parag",team:"RR",role:"BAT",country:"🇮🇳",price:14,base:2},
+  {name:"Vaibhav Suryavanshi",team:"RR",role:"BAT",country:"🇮🇳",price:1.1,base:0.3},
+  {name:"Shimron Hetmyer",team:"RR",role:"BAT",country:"🇬🇾",price:5.2,base:0.75},
+  {name:"Dhruv Jurel",team:"RR",role:"WK",country:"🇮🇳",price:14,base:2},
+  {name:"Ravindra Jadeja",team:"RR",role:"ALL",country:"🇮🇳",price:18,base:2},
+  {name:"Sam Curran",team:"RR",role:"ALL",country:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",price:7,base:0.75},
+  {name:"Jofra Archer",team:"RR",role:"BOWL",country:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",price:17,base:2},
+  {name:"Ravi Bishnoi",team:"RR",role:"BOWL",country:"🇮🇳",price:11,base:2},
+  {name:"Tushar Deshpande",team:"RR",role:"BOWL",country:"🇮🇳",price:5.75,base:0.75},
+  {name:"Kwena Maphaka",team:"RR",role:"BOWL",country:"🇿🇦",price:3.8,base:0.5},
+  // GT
+  {name:"Shubman Gill",team:"GT",role:"BAT",country:"🇮🇳",price:16.5,base:2},
+  {name:"Sai Sudharsan",team:"GT",role:"BAT",country:"🇮🇳",price:8.5,base:1},
+  {name:"Jos Buttler",team:"GT",role:"WK",country:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",price:15.75,base:2},
+  {name:"Washington Sundar",team:"GT",role:"ALL",country:"🇮🇳",price:3.2,base:0.5},
+  {name:"Nishant Sindhu",team:"GT",role:"ALL",country:"🇮🇳",price:8.5,base:0.3},
+  {name:"Jason Holder",team:"GT",role:"ALL",country:"🇧🇧",price:1,base:0.5},
+  {name:"Jayant Yadav",team:"GT",role:"ALL",country:"🇮🇳",price:1,base:0.5},
+  {name:"Rashid Khan",team:"GT",role:"BOWL",country:"🇦🇫",price:18,base:2},
+  {name:"Kagiso Rabada",team:"GT",role:"BOWL",country:"🇿🇦",price:9,base:2},
+  {name:"Mohammed Siraj",team:"GT",role:"BOWL",country:"🇮🇳",price:12.25,base:2},
+  {name:"Prasidh Krishna",team:"GT",role:"BOWL",country:"🇮🇳",price:9.5,base:1},
+  // PBKS
+  {name:"Shreyas Iyer",team:"PBKS",role:"BAT",country:"🇮🇳",price:26.75,base:2},
+  {name:"Shashank Singh",team:"PBKS",role:"BAT",country:"🇮🇳",price:5.5,base:0.5},
+  {name:"Prabhsimran Singh",team:"PBKS",role:"WK",country:"🇮🇳",price:4,base:0.5},
+  {name:"Marcus Stoinis",team:"PBKS",role:"ALL",country:"🇦🇺",price:2.8,base:0.75},
+  {name:"Marco Jansen",team:"PBKS",role:"ALL",country:"🇿🇦",price:12,base:2},
+  {name:"Priyansh Arya",team:"PBKS",role:"ALL",country:"🇮🇳",price:3.8,base:0.3},
+  {name:"Musheer Khan",team:"PBKS",role:"ALL",country:"🇮🇳",price:2,base:0.3},
+  {name:"Arshdeep Singh",team:"PBKS",role:"BOWL",country:"🇮🇳",price:18,base:2},
+  {name:"Yuzvendra Chahal",team:"PBKS",role:"BOWL",country:"🇮🇳",price:18,base:2},
+  {name:"Lockie Ferguson",team:"PBKS",role:"BOWL",country:"🇳🇿",price:2,base:0.5},
+  {name:"Xavier Bartlett",team:"PBKS",role:"BOWL",country:"🇦🇺",price:2.6,base:0.5},
+];
+
+const ROLE_LABEL = {BAT:'Batter',BOWL:'Bowler',ALL:'All-rounder',WK:'Wicketkeeper'};
+const ROLE_CLS = {BAT:'r-bat',BOWL:'r-bowl',ALL:'r-all',WK:'r-wk'};
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let USER = JSON.parse(localStorage.getItem('ipl_user') || 'null');
+let LEAGUES = JSON.parse(localStorage.getItem('ipl_leagues') || '[]');
+let ACTIVE_LEAGUE = null;
+let pRole = 'all', pTeam = '', pSearch = '';
+let A = { leagueId:null, queue:[], idx:0, bid:0, bidder:null, teams:[], sold:[] };
+let activeListeners = [];
+
+// ═══════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page, #league-detail-page').forEach(p => { p.classList.remove('active'); p.style.display=''; });
+  document.querySelectorAll('.ntab').forEach((t,i) => t.classList.toggle('active', ['home','leagues','players','auction','scoring'][i]===id));
+  if (id === 'league-detail') {
+    document.getElementById('league-detail-page').style.display = 'block';
+    document.getElementById('league-detail-page').classList.add('active');
+  } else {
+    const el = document.getElementById(id);
+    el.classList.add('active');
+    el.style.display = 'block';
+    if (id === 'leagues') renderLeagues();
+    if (id === 'players') renderPlayers();
+    if (id === 'auction') renderAuctionSide();
+  }
+  window.scrollTo(0,0);
+}
+function goHome() { showPage('home'); }
+
+// ═══════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════
+function doLogin() {
+  const name = document.getElementById('ln').value.trim();
+  if (!name) { toast('Enter your name', 'err'); return; }
+  USER = { id: 'u_'+Date.now(), name, email: document.getElementById('le').value.trim(), teamName: document.getElementById('lt').value.trim() || name+' XI' };
+  localStorage.setItem('ipl_user', JSON.stringify(USER));
+  document.getElementById('nav-user').textContent = '👤 '+name;
+  closeModal('login-modal');
+  toast('Welcome, '+name+'! 🎉', 'ok');
+  renderLeagues();
+}
+function initUser() {
+  if (USER) document.getElementById('nav-user').textContent = '👤 '+USER.name;
+}
+
+// ═══════════════════════════════════════════
+// FIREBASE HELPERS
+// ═══════════════════════════════════════════
+async function fbSet(path, data) {
+  if (!window._firebaseReady) return;
+  try {
+    const { doc, setDoc } = window._firebase;
+    await setDoc(doc(window._db, ...path.split('/')), data, { merge: true });
+  } catch(e) { console.warn('fbSet:', e); }
+}
+async function fbGet(path) {
+  if (!window._firebaseReady) return null;
+  try {
+    const { doc, getDoc } = window._firebase;
+    const snap = await getDoc(doc(window._db, ...path.split('/')));
+    return snap.exists() ? snap.data() : null;
+  } catch(e) { return null; }
+}
+function fbListen(path, cb) {
+  if (!window._firebaseReady) return () => {};
+  try {
+    const { doc, onSnapshot } = window._firebase;
+    const unsub = onSnapshot(doc(window._db, ...path.split('/')), snap => {
+      if (snap.exists()) cb(snap.data());
+    });
+    activeListeners.push(unsub);
+    return unsub;
+  } catch(e) { return () => {}; }
+}
+
+// ═══════════════════════════════════════════
+// LEAGUES
+// ═══════════════════════════════════════════
+function saveLG() { localStorage.setItem('ipl_leagues', JSON.stringify(LEAGUES)); }
+
+function createLeague() {
+  if (!USER) { closeModal('create-league-modal'); openModal('login-modal'); return; }
+  const name = document.getElementById('cl-name').value.trim();
+  if (!name) { toast('Enter a league name', 'err'); return; }
+  const code = Math.random().toString(36).substr(2,6).toUpperCase();
+  const budget = +document.getElementById('cl-budget').value;
+  const lg = {
+    id: 'lg_'+Date.now(), name, code,
+    maxTeams: +document.getElementById('cl-max').value,
+    budget, playersPerTeam: +document.getElementById('cl-players').value,
+    owner: USER.id, status: 'open', createdAt: Date.now(),
+    members: [{ id:USER.id, name:USER.name, teamName:USER.teamName||USER.name+' XI', budget, score:0, players:[] }]
+  };
+  LEAGUES.push(lg); saveLG();
+  if (window._firebaseReady) fbSet('leagues/'+lg.id, lg);
+  closeModal('create-league-modal');
+  toast('League created! 🏆', 'ok');
+  openLeague(lg.id);
+}
+
+function renderLeagues() {
+  const grid = document.getElementById('leagues-grid');
+  if (!LEAGUES.length) {
+    grid.innerHTML = '<div class="empty"><div class="empty-icon">🏆</div><div class="empty-title">No leagues yet</div>Create or join a league to start playing.</div>';
+    return;
+  }
+  grid.innerHTML = LEAGUES.map(l => `
+    <div class="lcard" onclick="openLeague('${l.id}')">
+      <div class="lcard-top">
+        <div class="lcard-icon">🏏</div>
+        <span class="badge badge-${l.status}">${l.status}</span>
+      </div>
+      <div class="lcard-name">${l.name}</div>
+      <div class="lcard-meta">${l.members.length}/${l.maxTeams} teams · ₹${l.budget}Cr · ${l.playersPerTeam} players</div>
+      <div class="lcard-footer">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="avatars">${l.members.slice(0,4).map(m=>`<div class="av" style="background:hsl(${m.name.charCodeAt(0)*7},45%,25%)">${m.name[0]}</div>`).join('')}</div>
+          <span style="font-size:0.78rem;color:var(--text2)">${l.members.length} members</span>
+        </div>
+        <button class="btn btn-sm" onclick="event.stopPropagation();copyCode('${l.code}')">📋 Invite</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openLeague(id) {
+  activeListeners.forEach(u => u()); activeListeners = [];
+  const lg = LEAGUES.find(l => l.id === id);
+  if (!lg) return;
+  ACTIVE_LEAGUE = id;
+  document.getElementById('ld-name').textContent = lg.name;
+  document.getElementById('ld-meta').textContent = `${lg.members.length}/${lg.maxTeams} teams · ₹${lg.budget}Cr budget · ${lg.playersPerTeam} players/team · Status: ${lg.status}`;
+  const url = `${location.origin}${location.pathname}?join=${lg.code}`;
+  document.getElementById('ld-invite-url').textContent = url;
+  document.getElementById('ld-invite-url').dataset.url = url;
+  renderLDMembers(lg); renderLDLeaderboard(lg);
+  // Real-time listener
+  if (window._firebaseReady) {
+    fbListen('leagues/'+id, data => {
+      const idx = LEAGUES.findIndex(l=>l.id===id);
+      if (idx>-1) { LEAGUES[idx]={...LEAGUES[idx],...data}; saveLG(); }
+      renderLDMembers(LEAGUES[idx]); renderLDLeaderboard(LEAGUES[idx]);
+    });
+  }
+  showPage('league-detail');
+}
+
+function renderLDMembers(lg) {
+  document.getElementById('ld-members').innerHTML = lg.members.map(m => `
+    <div class="member-item">
+      <div class="mi-left">
+        <div class="av" style="background:hsl(${m.name.charCodeAt(0)*7},45%,25%)">${m.name[0]}</div>
+        <div><div class="mi-name">${m.name}</div><div class="mi-team">${m.teamName}</div></div>
+      </div>
+      <div style="text-align:right">
+        <div class="mi-budget">₹${(m.budget||0).toFixed(1)}Cr</div>
+        <div style="font-size:0.72rem;color:var(--text2)">${(m.players||[]).length} players</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderLDLeaderboard(lg) {
+  const sorted = [...lg.members].sort((a,b)=>(b.score||0)-(a.score||0));
+  const ranks = ['gold','silver','bronze'];
+  document.getElementById('ld-lb').innerHTML = sorted.map((m,i) => `
+    <div class="lb-row">
+      <div class="lb-rank ${ranks[i]||''}">${i+1}</div>
+      <div class="av" style="background:hsl(${m.name.charCodeAt(0)*7},45%,25%)">${m.name[0]}</div>
+      <div class="lb-info"><div class="lb-team">${m.teamName}</div><div class="lb-owner">${m.name}</div></div>
+      <div style="text-align:right"><div class="lb-pts">${m.score||0}</div><div class="lb-players">${(m.players||[]).length} players</div></div>
+    </div>
+  `).join('');
+  // Fill score modal select
+  const sel = document.getElementById('score-member');
+  sel.innerHTML = sorted.map(m=>`<option value="${m.id}">${m.name} (${m.teamName})</option>`).join('');
+}
+
+function copyInvite() {
+  const url = document.getElementById('ld-invite-url').dataset.url;
+  navigator.clipboard.writeText(url).then(()=>toast('Invite link copied! 📋','ok'));
+}
+function copyCode(code) {
+  const url = `${location.origin}${location.pathname}?join=${code}`;
+  navigator.clipboard.writeText(url).then(()=>toast('Invite link copied!','ok'));
+}
+
+// ═══════════════════════════════════════════
+// JOIN
+// ═══════════════════════════════════════════
+async function checkInvite() {
+  const code = new URLSearchParams(location.search).get('join');
+  if (!code) return;
+  // check local first
+  let lg = LEAGUES.find(l=>l.code===code);
+  if (!lg && window._firebaseReady) {
+    // query firebase
+    try {
+      const { collection, query, where, getDocs } = window._firebase;
+      const q = query(collection(window._db,'leagues'), where('code','==',code));
+      const snap = await getDocs(q);
+      if (!snap.empty) { lg = snap.docs[0].data(); LEAGUES.push(lg); saveLG(); }
+    } catch(e) {}
+  }
+  if (lg) {
+    document.getElementById('join-preview').textContent = `You've been invited to: "${lg.name}" (${lg.members.length}/${lg.maxTeams} teams)`;
+    document.getElementById('join-modal')._code = code;
+    openModal('join-modal');
+  } else {
+    toast('Invite code not found on this device — ask your friend to share again','err');
+  }
+}
+
+async function joinLeague() {
+  if (!USER) { toast('Sign in first', 'err'); return; }
+  const teamName = document.getElementById('jt').value.trim();
+  if (!teamName) { toast('Enter your team name','err'); return; }
+  const code = document.getElementById('join-modal')._code;
+  let lg = LEAGUES.find(l=>l.code===code);
+  if (!lg) { toast('League not found','err'); return; }
+  if (lg.members.find(m=>m.id===USER.id)) { closeModal('join-modal'); openLeague(lg.id); return; }
+  if (lg.members.length >= lg.maxTeams) { toast('League is full!','err'); return; }
+  const newMember = { id:USER.id, name:USER.name, teamName, budget:lg.budget, score:0, players:[] };
+  lg.members.push(newMember); saveLG();
+  if (window._firebaseReady) await fbSet('leagues/'+lg.id, lg);
+  closeModal('join-modal');
+  toast(`Joined ${lg.name}! 🎉`,'ok');
+  openLeague(lg.id);
+}
+
+// ═══════════════════════════════════════════
+// SCORING
+// ═══════════════════════════════════════════
+async function addScore() {
+  const memberId = document.getElementById('score-member').value;
+  const pts = +document.getElementById('score-pts').value;
+  const note = document.getElementById('score-note').value.trim();
+  if (!pts) { toast('Enter points','err'); return; }
+  const lg = LEAGUES.find(l=>l.id===ACTIVE_LEAGUE);
+  if (!lg) return;
+  const m = lg.members.find(m=>m.id===memberId);
+  if (!m) return;
+  m.score = (m.score||0) + pts;
+  m.scoreLog = m.scoreLog || [];
+  m.scoreLog.push({ pts, note, at: Date.now() });
+  saveLG();
+  if (window._firebaseReady) await fbSet('leagues/'+lg.id, lg);
+  renderLDLeaderboard(lg);
+  closeModal('add-score-modal');
+  toast(`+${pts} pts added to ${m.teamName} ✓`,'ok');
+}
+
+// ═══════════════════════════════════════════
+// AUCTION
+// ═══════════════════════════════════════════
+function launchAuction() {
+  const lg = LEAGUES.find(l=>l.id===ACTIVE_LEAGUE);
+  if (!lg) return;
+  if (lg.members.length < 2) { toast('Need at least 2 members','err'); return; }
+  A.leagueId = lg.id;
+  A.queue = [...PLAYERS].sort(()=>Math.random()-.5);
+  A.idx = 0; A.bid = 0; A.bidder = null; A.sold = [];
+  A.teams = lg.members.map(m=>({...m, auctionBudget: lg.budget, bought:[]}));
+  lg.status = 'draft'; saveLG();
+  showPage('auction');
+  renderAuction();
+}
+
+function renderAuction() {
+  const lg = LEAGUES.find(l=>l.id===A.leagueId);
+  document.getElementById('auction-league-label').textContent = lg ? lg.name : 'No league';
+  document.getElementById('auction-progress').textContent = `Player ${A.idx+1} / ${A.queue.length}`;
+  const p = A.queue[A.idx];
+  if (!p) { auctionDone(); return; }
+  A.bid = p.base;
+  document.getElementById('ps-name').textContent = p.name;
+  document.getElementById('ps-team').textContent = `${p.team} · Base: ₹${p.base}Cr`;
+  document.getElementById('ps-role').textContent = ROLE_LABEL[p.role];
+  document.getElementById('ps-role').className = 'ps-role '+ROLE_CLS[p.role];
+  document.getElementById('ps-bid').textContent = '₹'+p.base+'Cr';
+  document.getElementById('ps-bidder').textContent = '';
+  renderBidderChips();
+  renderAuctionSide();
+}
+
+function renderBidderChips() {
+  document.getElementById('bidder-chips').innerHTML = A.teams.map(t=>`
+    <div class="bidder-chip ${A.bidder===t.id?'selected':''}" onclick="selectBidder('${t.id}','${t.name}')">${t.name}</div>
+  `).join('');
+}
+
+function selectBidder(id, name) {
+  A.bidder = id;
+  document.getElementById('ps-bidder').textContent = '🔨 '+name+' is bidding';
+  renderBidderChips();
+}
+
+function incBid(n) {
+  A.bid = +((A.bid + n).toFixed(1));
+  document.getElementById('ps-bid').textContent = '₹'+A.bid+'Cr';
+}
+
+function placeBid() {
+  if (!A.bidder) { toast('Select a bidder first','err'); return; }
+  const t = A.teams.find(t=>t.id===A.bidder);
+  if (t && A.bid > t.auctionBudget) { toast(`${t.name} only has ₹${t.auctionBudget.toFixed(1)}Cr left!`,'err'); return; }
+  toast(`${t?.name} bids ₹${A.bid}Cr 🔨`,'ok');
+}
+
+function soldPlayer() {
+  if (!A.bidder) { toast('Select who won the bid','err'); return; }
+  const p = A.queue[A.idx];
+  const t = A.teams.find(t=>t.id===A.bidder);
+  if (t) { t.auctionBudget = Math.max(0, +(t.auctionBudget - A.bid).toFixed(1)); t.bought.push({...p, soldPrice:A.bid}); }
+  A.sold.push({ player:p, team:t?.name||'?', price:A.bid });
+  updateLeagueBudgets();
+  toast(`${p.name} SOLD to ${t?.name} for ₹${A.bid}Cr! 🎉`,'ok');
+  renderSoldLog();
+  A.idx++; A.bidder = null;
+  if (A.idx >= A.queue.length) { auctionDone(); return; }
+  renderAuction();
+}
+
+function skipPlayer() { A.idx++; A.bidder=null; if(A.idx>=A.queue.length){auctionDone();return;} renderAuction(); }
+
+function updateLeagueBudgets() {
+  const lg = LEAGUES.find(l=>l.id===A.leagueId);
+  if (!lg) return;
+  A.teams.forEach(t => {
+    const m = lg.members.find(m=>m.id===t.id);
+    if (m) { m.budget = t.auctionBudget; m.players = t.bought; }
+  });
+  saveLG();
+  if (window._firebaseReady) fbSet('leagues/'+lg.id, lg);
+}
+
+function renderSoldLog() {
+  const log = document.getElementById('sold-log');
+  document.getElementById('sold-count').textContent = A.sold.length;
+  log.innerHTML = [...A.sold].reverse().map(s=>`
+    <div class="sold-item">
+      <div><div class="sold-pname">${s.player.name}</div><div class="sold-pto">→ ${s.team}</div></div>
+      <div class="sold-pprice">₹${s.price}Cr</div>
+    </div>
+  `).join('') || '<div style="color:var(--text2);font-size:0.83rem;padding:.5rem 0">No players sold yet</div>';
+}
+
+function renderAuctionSide() {
+  document.getElementById('budget-rows').innerHTML = A.teams.map(t=>`
+    <div class="budget-row">
+      <div><div class="br-name">${t.name}</div><div class="br-count">${t.bought.length} players</div></div>
+      <div class="br-budget">₹${(t.auctionBudget||0).toFixed(1)}Cr</div>
+    </div>
+  `).join('') || '<div style="color:var(--text2);font-size:0.82rem">Start auction from a league</div>';
+  const upcoming = A.queue.slice(A.idx+1, A.idx+7);
+  document.getElementById('queue-list').innerHTML = upcoming.map((p,i)=>`
+    <div class="queue-item">
+      <div class="qi-num">${i+2}</div>
+      <div><div class="qi-name">${p.name}</div><div class="qi-team">${p.team}</div></div>
+      <div class="qi-price">₹${p.base}Cr</div>
+    </div>
+  `).join('') || '<div style="color:var(--text2);font-size:0.82rem">No upcoming players</div>';
+}
+
+function auctionDone() {
+  document.getElementById('player-stage').innerHTML = `
+    <div style="padding:2rem;text-align:center">
+      <div style="font-size:4rem;margin-bottom:1rem">🎉</div>
+      <div style="font-family:'Bebas Neue';font-size:2.5rem;letter-spacing:2px;margin-bottom:.5rem">Auction Complete!</div>
+      <div style="color:var(--text2);margin-bottom:1.5rem">${A.sold.length} players sold across ${A.teams.length} teams</div>
+      <button class="btn btn-primary" onclick="showPage('leagues')">View Leagues →</button>
+    </div>
+  `;
+  const lg = LEAGUES.find(l=>l.id===A.leagueId);
+  if (lg) { lg.status='live'; saveLG(); if(window._firebaseReady) fbSet('leagues/'+lg.id,lg); }
+}
+
+function resetAuction() {
+  A = { leagueId:null, queue:[], idx:0, bid:0, bidder:null, teams:[], sold:[] };
+  renderAuctionSide();
+  document.getElementById('ps-name').textContent = 'No Player';
+  document.getElementById('ps-team').textContent = 'Open from a league to start auction';
+  document.getElementById('ps-bid').textContent = '₹0Cr';
+  document.getElementById('ps-bidder').textContent = '';
+  document.getElementById('auction-progress').textContent = '—';
+  document.getElementById('auction-league-label').textContent = 'Open from a league to begin';
+  document.getElementById('sold-log').innerHTML = '<div style="color:var(--text2);font-size:0.83rem;padding:.5rem 0">No players sold yet</div>';
+  document.getElementById('sold-count').textContent = '0';
+  document.getElementById('bidder-chips').innerHTML = '';
+}
+
+// ═══════════════════════════════════════════
+// PLAYERS TABLE
+// ═══════════════════════════════════════════
+function renderPlayers() { applyFilters(); }
+function applyFilters() {
+  const data = PLAYERS.filter(p => {
+    if (pRole !== 'all' && p.role !== pRole) return false;
+    if (pTeam && p.team !== pTeam) return false;
+    if (pSearch && !p.name.toLowerCase().includes(pSearch.toLowerCase())) return false;
+    return true;
+  });
+  document.getElementById('ptbody').innerHTML = data.map((p,i)=>`
+    <tr>
+      <td style="color:var(--text2);font-family:'JetBrains Mono';font-size:0.75rem">${i+1}</td>
+      <td>
+        <div class="pcell">
+          <div class="pav">${p.name.split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
+          <div><div class="pname">${p.name}</div><div class="pteam-small">${p.team}</div></div>
+        </div>
+      </td>
+      <td><span class="ps-role ${ROLE_CLS[p.role]}" style="font-size:0.7rem;padding:3px 10px">${ROLE_LABEL[p.role]}</span></td>
+      <td><span class="team-chip tc-${p.team}">${p.team}</span></td>
+      <td style="font-size:1rem">${p.country}</td>
+      <td class="price-mono">₹${p.price}Cr</td>
+      <td class="price-mono" style="color:var(--text2)">₹${p.base}Cr</td>
+    </tr>
+  `).join('');
+}
+function filterP(v) { pSearch=v; applyFilters(); }
+function roleF(r, btn) { pRole=r; document.querySelectorAll('.filt').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); applyFilters(); }
+function teamF(v) { pTeam=v; applyFilters(); }
+
+// ═══════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); }));
+
+// ═══════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════
+function toast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show'+(type?' '+type:'');
+  clearTimeout(t._t); t._t = setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+initUser();
+renderPlayers();
+setTimeout(checkInvite, 800); // wait for firebase to init
+</script>
+</body>
+</html>
